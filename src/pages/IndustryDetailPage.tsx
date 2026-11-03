@@ -1,7 +1,8 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { industries, services } from '../data/siteContent';
+import { industries } from '../data/industries';
+import { services } from '../data/siteContent';
 import SEO from '../components/ui/SEO';
 
 export default function IndustryDetailPage() {
