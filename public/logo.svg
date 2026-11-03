@@ -1,177 +1,66 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
   <defs>
-    <!-- Background Card Shadow -->
-    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="125%">
-      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.15" />
-    </filter>
-
-    <!-- Ambient Emblem Aura -->
-    <radialGradient id="emblemAura" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.35" />
-      <stop offset="50%" stop-color="#312E81" stop-opacity="0.22" />
-      <stop offset="100%" stop-color="#1E1B4B" stop-opacity="0" />
+    <linearGradient id="logoSvgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E6FE0" />
+      <stop offset="45%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#8B7CFF" />
+    </linearGradient>
+    <radialGradient id="logoSvgAura" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#1E6FE0" stop-opacity="0.35" />
+      <stop offset="50%" stop-color="#0F1E38" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#0A1428" />
     </radialGradient>
-
-    <!-- Deep Indigo Facet Gradients -->
-    <linearGradient id="indigoPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4338CA" />
-      <stop offset="40%" stop-color="#312E81" />
-      <stop offset="100%" stop-color="#1E1B4B" />
-    </linearGradient>
-
-    <linearGradient id="indigoShade" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#1E1B4B" />
-      <stop offset="70%" stop-color="#2E1065" />
-      <stop offset="100%" stop-color="#3730A3" />
-    </linearGradient>
-
-    <!-- Vibrant Electric Blue Facet Gradients -->
-    <linearGradient id="electricGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00F0FF" />
-      <stop offset="40%" stop-color="#00A3FF" />
-      <stop offset="85%" stop-color="#0055FF" />
-      <stop offset="100%" stop-color="#2563EB" />
-    </linearGradient>
-
-    <linearGradient id="electricAccent" x1="100%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#7DD3FC" />
-      <stop offset="30%" stop-color="#00F0FF" />
-      <stop offset="100%" stop-color="#0284C7" />
-    </linearGradient>
-
-    <!-- Hybrid Interlocking Bridge Gradient (Deep Indigo into Electric Blue) -->
-    <linearGradient id="bridgeGrad" x1="0%" y1="50%" x2="100%" y2="50%">
-      <stop offset="0%" stop-color="#1E1B4B" />
-      <stop offset="25%" stop-color="#312E81" />
-      <stop offset="55%" stop-color="#4F46E5" />
-      <stop offset="80%" stop-color="#00A3FF" />
-      <stop offset="100%" stop-color="#00F0FF" />
-    </linearGradient>
-
-    <!-- Hybrid Text Gradient -->
-    <linearGradient id="hybridTextGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#4338CA" />
-      <stop offset="35%" stop-color="#2563EB" />
-      <stop offset="70%" stop-color="#00A3FF" />
-      <stop offset="100%" stop-color="#00F0FF" />
-    </linearGradient>
-
-    <!-- Line Gradient -->
-    <linearGradient id="lineGradLeft" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0" />
-      <stop offset="100%" stop-color="#4338CA" />
-    </linearGradient>
-    <linearGradient id="lineGradRight" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#4338CA" />
-      <stop offset="100%" stop-color="#00F0FF" stop-opacity="0" />
-    </linearGradient>
-
-    <!-- 3D Shadow for Emblem -->
-    <filter id="emblemShadow" x="-15%" y="-15%" width="130%" height="135%">
-      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.25" />
+    <filter id="logoSvgShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.4" />
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#38BDF8" flood-opacity="0.25" />
     </filter>
   </defs>
 
-  <!-- WHITE ROUNDED SQUARE BOX CONTAINER -->
-  <rect x="25" y="25" width="550" height="550" rx="80" ry="80" fill="#FFFFFF" filter="url(#cardShadow)" />
-  <!-- Subtle Inner Border -->
-  <rect x="25" y="25" width="550" height="550" rx="80" ry="80" fill="none" stroke="#F1F5F9" stroke-width="2" />
+  <!-- Container Box -->
+  <rect x="25" y="25" width="550" height="550" rx="90" fill="url(#logoSvgAura)" stroke="rgba(255,255,255,0.08)" stroke-width="2" filter="url(#logoSvgShadow)" />
 
-  <!-- EMBLEM SECTION -->
-  <g transform="translate(50, 20)">
-    <!-- Ambient Aura -->
-    <ellipse cx="250" cy="210" rx="180" ry="65" fill="url(#emblemAura)" />
+  <!-- Monogram Mark -->
+  <g transform="translate(145, 70)">
+    <!-- Circuit lines for L and H -->
+    <path d="M 60 40 L 60 210 L 160 210" fill="none" stroke="url(#logoSvgGrad)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 240 65 L 240 235" fill="none" stroke="url(#logoSvgGrad)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 60 145 L 240 145" fill="none" stroke="url(#logoSvgGrad)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 160 210 L 240 145" fill="none" stroke="#38BDF8" stroke-width="16" stroke-dasharray="10 14" opacity="0.85" stroke-linecap="round" />
 
-    <g filter="url(#emblemShadow)">
-      <!-- BACK INTEGRATION CONNECTOR (Deep Indigo loop wrapping through behind) -->
-      <path d="M 175 145 C 130 95 85 140 85 195 C 85 255 145 285 205 270 C 255 258 290 205 330 170 C 375 130 425 150 420 205" 
-            fill="none" stroke="url(#indigoShade)" stroke-width="28" stroke-linecap="round" />
+    <!-- 3 Node Dots -->
+    <circle cx="60" cy="40" r="18" fill="#38BDF8" />
+    <circle cx="60" cy="40" r="7" fill="#FFFFFF" />
 
-      <!-- FUTURISTIC FACETED 'L' HYBRID WING -->
-      <polygon points="120,95 155,70 155,270 120,290" fill="url(#indigoShade)" />
-      <polygon points="155,70 195,90 195,250 155,270" fill="url(#indigoPrimary)" />
-      <polygon points="120,95 155,70 195,90 160,110" fill="#6366F1" />
+    <circle cx="150" cy="145" r="16" fill="#8B7CFF" />
+    <circle cx="150" cy="145" r="6" fill="#FFFFFF" />
 
-      <!-- Base connector -->
-      <polygon points="155,270 195,250 280,270 240,295" fill="url(#indigoPrimary)" />
-
-      <!-- SEAMLESS CONVERGENCE NODE - INTERSECTING MÖBIUS BANDS -->
-      <path d="M 125 160 C 175 90 270 110 320 180 C 365 240 420 260 415 190 C 410 135 345 130 285 175 C 235 210 185 280 120 230" 
-            fill="none" stroke="url(#bridgeGrad)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
-
-      <!-- VIBRANT ELECTRIC BLUE ASCENDING LOOP -->
-      <path d="M 195 240 C 235 285 300 290 350 260 C 415 220 425 145 365 105 C 315 70 245 110 205 170 C 170 220 190 265 240 280" 
-            fill="none" stroke="url(#electricGrad)" stroke-width="24" stroke-linecap="round" />
-
-      <!-- RIGHT ELECTRIC FACETED PILLAR -->
-      <polygon points="310,110 345,85 345,285 310,305" fill="url(#electricAccent)" />
-      <polygon points="345,85 380,100 380,265 345,285" fill="url(#electricGrad)" />
-      <polygon points="310,110 345,85 380,100 345,120" fill="#E0F2FE" />
-
-      <!-- HYBRID CROSS-INTEGRATION CONDUIT -->
-      <polygon points="195,170 310,170 310,205 195,205" fill="#1E1B4B" />
-      <polygon points="195,175 310,175 310,195 195,195" fill="url(#electricAccent)" opacity="0.85" />
-
-      <!-- CENTRAL QUANTUM ENERGY CORE -->
-      <polygon points="250,155 275,185 250,215 225,185" fill="#00F0FF" />
-      <polygon points="250,165 267,185 250,205 233,185" fill="#FFFFFF" opacity="0.9" />
-
-      <!-- SPECULAR GLOSSY WAVEGUIDE -->
-      <path d="M 140 135 C 180 85 260 100 310 165 C 345 210 395 240 405 190" 
-            fill="none" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="4" stroke-linecap="round" />
-
-      <!-- DIGITAL CIRCUIT NODES -->
-      <rect x="385" y="80" width="16" height="16" rx="3" fill="#00F0FF" />
-      <rect x="410" y="65" width="18" height="18" rx="3" fill="#38BDF8" />
-      <rect x="395" y="40" width="14" height="14" rx="2.5" fill="#00A3FF" />
-      <rect x="424" y="32" width="12" height="12" rx="2" fill="#0066FF" />
-      <rect x="444" y="24" width="10" height="10" rx="2" fill="#38BDF8" />
-      <rect x="438" y="52" width="15" height="15" rx="3" fill="#6366F1" />
-      <rect x="412" y="95" width="12" height="12" rx="2" fill="#0284C7" />
-      <rect x="398" y="120" width="14" height="14" rx="2.5" fill="#0055FF" />
-      <rect x="385" y="105" width="12" height="12" rx="2" fill="#7DD3FC" />
-
-      <!-- Left Nodes -->
-      <circle cx="85" cy="195" r="5" fill="#6366F1" />
-      <circle cx="95" cy="225" r="4" fill="#00F0FF" />
-      <circle cx="115" cy="265" r="3.5" fill="#38BDF8" />
-    </g>
+    <circle cx="240" cy="235" r="18" fill="#1E6FE0" />
+    <circle cx="240" cy="235" r="7" fill="#FFFFFF" />
   </g>
 
-  <!-- TYPOGRAPHY SECTION -->
-  <g text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <!-- Wordmark Section -->
+  <g text-anchor="middle" font-family="system-ui, -apple-system, 'Inter', BlinkMacSystemFont, sans-serif">
     <!-- LETSVING HYBRID -->
-    <text x="300" y="415" font-weight="900" font-size="38" letter-spacing="1">
-      <tspan fill="#0F172A">LETSVING </tspan>
-      <tspan fill="url(#hybridTextGrad)">HYBRID</tspan>
+    <text x="300" y="420" font-weight="900" font-size="42" letter-spacing="1">
+      <tspan fill="#FFFFFF">LETSVING </tspan>
+      <tspan fill="url(#logoSvgGrad)">HYBRID</tspan>
     </text>
 
-    <!-- TECHNOLOGY WITH ACCENT LINES -->
-    <g transform="translate(0, 445)">
-      <!-- Left line -->
-      <line x1="75" y1="0" x2="175" y2="0" stroke="url(#lineGradLeft)" stroke-width="2.5" stroke-linecap="round" />
-      <!-- Technology text -->
-      <text x="300" y="5" font-weight="800" font-size="16" letter-spacing="8" fill="#0284C7">
-        TECHNOLOGY
-      </text>
-      <!-- Right line -->
-      <line x1="425" y1="0" x2="525" y2="0" stroke="url(#lineGradRight)" stroke-width="2.5" stroke-linecap="round" />
-    </g>
+    <!-- TECHNOLOGY -->
+    <text x="300" y="460" font-weight="700" font-size="16" letter-spacing="10" fill="#38BDF8" font-family="monospace">
+      TECHNOLOGY
+    </text>
 
-    <!-- PRIVATE LIMITED -->
-    <text x="300" y="480" font-weight="600" font-size="12" letter-spacing="7" fill="#64748B">
+    <text x="300" y="495" font-weight="600" font-size="11" letter-spacing="6" fill="rgba(255,255,255,0.4)">
       PRIVATE LIMITED
     </text>
 
-    <!-- AI • HYBRID CLOUD • INNOVATION -->
-    <g transform="translate(0, 520)" font-weight="600" font-size="11" letter-spacing="4" fill="#334155">
-      <text x="300" y="0">
-        <tspan>AI</tspan>
-        <tspan fill="#00F0FF" font-size="14">  ●  </tspan>
-        <tspan>HYBRID CLOUD</tspan>
-        <tspan fill="#00F0FF" font-size="14">  ●  </tspan>
-        <tspan>INNOVATION</tspan>
-      </text>
-    </g>
+    <text x="300" y="525" font-weight="700" font-size="10" letter-spacing="4" fill="rgba(255,255,255,0.6)">
+      <tspan fill="#8B7CFF">AI</tspan>
+      <tspan fill="#38BDF8">  ●  </tspan>
+      <tspan fill="#8B7CFF">HYBRID CLOUD</tspan>
+      <tspan fill="#38BDF8">  ●  </tspan>
+      <tspan fill="#8B7CFF">INNOVATION</tspan>
+    </text>
   </g>
 </svg>

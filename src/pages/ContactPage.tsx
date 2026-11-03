@@ -2,32 +2,65 @@ import { motion } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Send, MapPin, Phone, Mail } from 'lucide-react';
-import { useState } from 'react';
+import { Send, MapPin, Phone, Mail, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import SEO from '../components/ui/SEO';
 
 const formSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
-  company: z.string().optional(),
-  purpose: z.string().min(1, 'Please select a purpose'),
-  message: z.string().min(10, 'Please provide more details'),
+  name: z.string().trim().min(2, 'Full name must be at least 2 characters').max(100, 'Name is too long'),
+  email: z.string().trim().email('Please enter a valid business email address'),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^$|^[+]?[\d\s\-().]{7,20}$/, 'Please enter a valid phone number or leave blank')
+    .optional(),
+  company: z.string().trim().max(100, 'Company name is too long').optional(),
+  purpose: z.string().min(1, 'Please select the purpose of your enquiry'),
+  message: z.string().trim().min(10, 'Please provide at least 10 characters in your message').max(2000, 'Message cannot exceed 2000 characters'),
+  honeypot: z.string().optional(),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 export default function ContactPage() {
+  const [searchParams] = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<z.infer<typeof formSchema>>({
+  const defaultPurpose = searchParams.get('purpose') || '';
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+    reset,
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      purpose: defaultPurpose,
+      honeypot: '',
+    },
   });
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  useEffect(() => {
+    if (defaultPurpose) {
+      setValue('purpose', defaultPurpose);
+    }
+  }, [defaultPurpose, setValue]);
+
+  const onSubmit = async (data: FormValues) => {
+    // Honeypot bot protection
+    if (data.honeypot && data.honeypot.length > 0) {
+      setIsSuccess(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage(null);
-    
+
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
@@ -38,14 +71,16 @@ export default function ContactPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        throw new Error('Server returned an error status.');
       }
 
       setIsSuccess(true);
       reset();
     } catch (error) {
-      console.error(error);
-      setErrorMessage('There was an error sending your message. Please try again or contact us directly at connect@letsving.com.');
+      console.error('Contact submission error:', error);
+      setErrorMessage(
+        'Unable to send message right now. Please reach out to us directly at connect@letsving.com or call +91 70905 92257.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -53,205 +88,323 @@ export default function ContactPage() {
 
   return (
     <div className="w-full">
-      <SEO 
-        title="Contact Us" 
-        description="Get in touch with Letsving Hybrid Technology. Let's talk about your next project or digital transformation."
+      <SEO
+        title="Contact Us & Get a Quote"
+        description="Get in touch with Letsving Hybrid Technology. Request a project quote, discuss digital transformation, or consult our engineering team."
         canonicalUrl="/contact"
       />
-      <section className="bg-[#050B18] py-32 text-center border-b border-white/5 relative overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+      {/* Header Banner */}
+      <section className="bg-[#050B18] py-24 sm:py-32 text-center border-b border-white/5 relative overflow-hidden" aria-label="Contact Header">
+        <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[#1E6FE0]/10 rounded-full blur-[120px] pointer-events-none" aria-hidden="true"></div>
         <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="text-[50px] md:text-[80px] font-black tracking-tighter uppercase text-[#F5F5F5] mb-6">Contact Us</h1>
-            <p className="text-lg text-white/60 max-w-2xl mx-auto font-light leading-relaxed">
-              Let's Talk About Your Next Project. We're here to help you build smart solutions for a stronger future.
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <h1 className="text-[clamp(2.5rem,6vw,4.5rem)] font-black tracking-tighter uppercase text-[#F5F5F5] mb-4">
+              Get in Touch
+            </h1>
+            <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto font-light leading-relaxed">
+              Let&apos;s talk about your next project, architectural roadmap, or hybrid cloud migration.
             </p>
           </motion.div>
         </div>
       </section>
 
-      <section className="py-32 bg-[#0A1428]">
+      {/* Main Form & Contact Info */}
+      <section className="py-20 sm:py-28 bg-[#0A1428]" aria-label="Contact Details and Form">
         <div className="container mx-auto px-4 sm:px-6 lg:px-12 max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24">
-            
-            {/* Contact Info */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+            {/* Contact Info Column */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5 }}
+              className="lg:col-span-5 space-y-10"
             >
-              <h2 className="text-3xl font-black tracking-tighter uppercase mb-12 text-[#F5F5F5]">Contact Options</h2>
-              
-              <div className="space-y-12">
-                <div className="flex items-start gap-6 group">
-                  <div className="w-16 h-16 border border-white/10 bg-[#0F1E38] flex items-center justify-center text-primary flex-shrink-0 group-hover:border-primary transition-colors">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tighter uppercase mb-6 text-[#F5F5F5]">
+                  Direct Channels
+                </h2>
+                <p className="text-slate-300 font-light leading-relaxed">
+                  Our solution architects and support engineers respond within 24 business hours.
+                </p>
+              </div>
+
+              <div className="space-y-8">
+                <div className="flex items-start gap-5">
+                  <div className="w-14 h-14 border border-white/15 bg-[#0F1E38] flex items-center justify-center text-[#38BDF8] flex-shrink-0 rounded-lg">
                     <Mail size={24} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold tracking-widest uppercase mb-2 text-[#F5F5F5]">Email Us</h3>
-                    <p className="text-white/60 font-light mb-2">For general inquiries and project discussions.</p>
-                    <a href="mailto:connect@letsving.com" className="text-primary font-medium hover:underline tracking-wider">CONNECT@LETSVING.COM</a>
+                    <span className="text-xs font-bold tracking-widest uppercase text-slate-400 block mb-1">Email Inquiries</span>
+                    <a
+                      href="mailto:connect@letsving.com"
+                      className="text-sm font-semibold text-white hover:text-[#38BDF8] transition-colors min-h-[44px] inline-flex items-center"
+                    >
+                      CONNECT@LETSVING.COM
+                    </a>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-6 group">
-                  <div className="w-16 h-16 border border-white/10 bg-[#0F1E38] flex items-center justify-center text-primary flex-shrink-0 group-hover:border-primary transition-colors">
+                <div className="flex items-start gap-5">
+                  <div className="w-14 h-14 border border-white/15 bg-[#0F1E38] flex items-center justify-center text-[#38BDF8] flex-shrink-0 rounded-lg">
                     <Phone size={24} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold tracking-widest uppercase mb-2 text-[#F5F5F5]">Call Us</h3>
-                    <p className="text-white/60 font-light mb-2">Mon-Fri from 9am to 6pm.</p>
-                    <a href="tel:+917090592257" className="text-primary font-medium hover:underline tracking-wider">+91 70905 92257</a>
+                    <span className="text-xs font-bold tracking-widest uppercase text-slate-400 block mb-1">Direct Line</span>
+                    <a
+                      href="tel:+917090592257"
+                      className="text-sm font-semibold text-white hover:text-[#38BDF8] transition-colors min-h-[44px] inline-flex items-center"
+                    >
+                      +91 70905 92257
+                    </a>
+                    <p className="text-xs text-slate-400 mt-0.5">Monday to Friday, 9:00 AM – 6:00 PM IST</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-6 group">
-                  <div className="w-16 h-16 border border-white/10 bg-[#0F1E38] flex items-center justify-center text-primary flex-shrink-0 group-hover:border-primary transition-colors">
+                <div className="flex items-start gap-5">
+                  <div className="w-14 h-14 border border-white/15 bg-[#0F1E38] flex items-center justify-center text-[#38BDF8] flex-shrink-0 rounded-lg">
                     <MapPin size={24} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold tracking-widest uppercase mb-2 text-[#F5F5F5]">Visit Us</h3>
-                    <p className="text-white/60 font-light leading-relaxed">
+                    <span className="text-xs font-bold tracking-widest uppercase text-slate-400 block mb-1">Headquarters</span>
+                    <address className="not-italic text-sm text-slate-200 leading-relaxed">
                       Letsving Hybrid Technology Private Limited<br />
                       13th Main Rd, Gayathri Nagar, 3rd Block, Rajajinagar<br />
                       Bengaluru, Karnataka 560010
-                    </p>
+                    </address>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-16 p-8 bg-[#0F1E38] border border-white/5 group hover:border-white/20 transition-colors">
-                <h3 className="text-sm font-bold tracking-widest uppercase text-[#F5F5F5] mb-2">Looking for a job?</h3>
-                <p className="text-white/60 font-light text-sm mb-6">We are always looking for talented people to join our team.</p>
-                <a href="/careers" className="btn-secondary">View open positions</a>
+              <div className="p-6 bg-[#0F1E38] border border-white/10 rounded-lg">
+                <h3 className="text-xs font-bold tracking-widest uppercase text-[#38BDF8] mb-2">Looking for a Career?</h3>
+                <p className="text-xs text-slate-300 font-light mb-4 leading-relaxed">
+                  We are hiring across Cloud, DevOps, Full-Stack Engineering, and AI.
+                </p>
+                <a href="/careers" className="text-xs font-bold uppercase tracking-wider text-white hover:text-[#38BDF8] inline-flex items-center gap-1.5 min-h-[44px]">
+                  <span>Explore open positions</span>
+                  <span aria-hidden="true">&rarr;</span>
+                </a>
               </div>
             </motion.div>
 
-            {/* Contact Form */}
+            {/* Contact Form Column */}
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5 }}
+              className="lg:col-span-7"
             >
-              <div className="bg-[#0F1E38] border border-white/10 p-12 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse inline-block"></span>
+              <div className="bg-[#0F1E38] border border-white/15 p-8 sm:p-12 rounded-xl relative shadow-2xl">
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-2xl font-black tracking-tight uppercase text-[#F5F5F5]">
+                    {defaultPurpose === 'project' ? 'Request a Project Quote' : 'Send an Enquiry'}
+                  </h2>
+                  <span className="text-xs text-slate-400">
+                    <span className="text-[#38BDF8]">*</span> Required
+                  </span>
                 </div>
-                <h3 className="text-2xl font-black tracking-tighter uppercase text-[#F5F5F5] mb-10">Send a Message</h3>
-                
+
+                {errorMessage && (
+                  <div className="mb-6 p-4 bg-red-950/60 border border-red-500/40 rounded-lg flex items-start gap-3 text-red-200 text-sm" role="alert">
+                    <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
+                    <p>{errorMessage}</p>
+                  </div>
+                )}
+
                 {isSuccess ? (
-                  <div className="text-center py-16">
-                    <div className="w-20 h-20 border border-primary/30 text-primary flex items-center justify-center mx-auto mb-6">
-                      <Send size={32} />
+                  <div className="text-center py-16" role="status" aria-live="polite">
+                    <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto mb-6">
+                      <CheckCircle2 size={36} />
                     </div>
-                    <h4 className="text-2xl font-bold text-[#F5F5F5] uppercase tracking-tighter mb-4">Message Sent</h4>
-                    <p className="text-white/60 font-light mb-10">Thank you for reaching out. Our team will get back to you shortly.</p>
-                    <button 
+                    <h3 className="text-2xl font-bold text-white uppercase tracking-tight mb-3">
+                      Enquiry Received
+                    </h3>
+                    <p className="text-slate-300 font-light max-w-md mx-auto mb-8 text-sm sm:text-base leading-relaxed">
+                      Thank you for contacting Letsving Hybrid Technology. A dedicated specialist will follow up with you within one business day.
+                    </p>
+                    <button
+                      type="button"
                       onClick={() => setIsSuccess(false)}
-                      className="btn-secondary"
+                      className="btn-secondary min-h-[44px]"
                     >
-                      Send another message
+                      Send Another Message
                     </button>
                   </div>
                 ) : (
-                  <div>
-                    {errorMessage && (
-                      <div className="mb-6 p-4 bg-red-950/40 border border-red-500/30 text-red-200 text-xs rounded">
-                        {errorMessage}
-                      </div>
-                    )}
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    
-                    {/* Honeypot field for spam prevention */}
-                    <div style={{ position: 'absolute', opacity: 0, top: 0, left: 0, zIndex: -1 }}>
-                      <label htmlFor="honeypot">Leave this field empty</label>
-                      <input 
-                        type="text" 
-                        id="honeypot" 
-                        {...register('honeypot' as any)} 
-                        tabIndex={-1} 
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+                    {/* Honeypot Field (Invisible to screen readers & bots) */}
+                    <div className="sr-only" aria-hidden="true">
+                      <label htmlFor="contact-honeypot">Do not fill this</label>
+                      <input
+                        id="contact-honeypot"
+                        type="text"
+                        tabIndex={-1}
                         autoComplete="off"
+                        {...register('honeypot')}
                       />
                     </div>
 
+                    {/* Full Name */}
                     <div>
-                      <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Full Name <span className="text-primary">*</span></label>
-                      <input 
+                      <label htmlFor="contact-name" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                        Full Name <span className="text-[#38BDF8]">*</span>
+                      </label>
+                      <input
+                        id="contact-name"
+                        type="text"
+                        autoComplete="name"
+                        aria-invalid={!!errors.name}
+                        aria-describedby={errors.name ? 'contact-name-error' : undefined}
+                        className={`w-full bg-[#0A1428] border ${
+                          errors.name ? 'border-red-500' : 'border-white/15'
+                        } rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors`}
+                        placeholder="e.g. Sarah Jenkins"
                         {...register('name')}
-                        className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors"
                       />
-                      {errors.name && <p className="text-primary text-xs mt-2">{errors.name.message}</p>}
+                      {errors.name && (
+                        <p id="contact-name-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                          <AlertCircle size={14} /> {errors.name.message}
+                        </p>
+                      )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Email & Phone Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Email <span className="text-primary">*</span></label>
-                        <input 
-                          {...register('email')}
+                        <label htmlFor="contact-email" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                          Business Email <span className="text-[#38BDF8]">*</span>
+                        </label>
+                        <input
+                          id="contact-email"
                           type="email"
-                          className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors"
+                          autoComplete="email"
+                          aria-invalid={!!errors.email}
+                          aria-describedby={errors.email ? 'contact-email-error' : undefined}
+                          className={`w-full bg-[#0A1428] border ${
+                            errors.email ? 'border-red-500' : 'border-white/15'
+                          } rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors`}
+                          placeholder="sarah@company.com"
+                          {...register('email')}
                         />
-                        {errors.email && <p className="text-primary text-xs mt-2">{errors.email.message}</p>}
+                        {errors.email && (
+                          <p id="contact-email-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                            <AlertCircle size={14} /> {errors.email.message}
+                          </p>
+                        )}
                       </div>
+
                       <div>
-                        <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Phone</label>
-                        <input 
-                          {...register('phone')}
+                        <label htmlFor="contact-phone" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                          Phone Number
+                        </label>
+                        <input
+                          id="contact-phone"
                           type="tel"
-                          className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors"
+                          autoComplete="tel"
+                          aria-invalid={!!errors.phone}
+                          aria-describedby={errors.phone ? 'contact-phone-error' : undefined}
+                          className={`w-full bg-[#0A1428] border ${
+                            errors.phone ? 'border-red-500' : 'border-white/15'
+                          } rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors`}
+                          placeholder="+1 (555) 000-0000"
+                          {...register('phone')}
                         />
+                        {errors.phone && (
+                          <p id="contact-phone-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                            <AlertCircle size={14} /> {errors.phone.message}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Company & Purpose Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Company</label>
-                        <input 
+                        <label htmlFor="contact-company" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                          Organization / Company
+                        </label>
+                        <input
+                          id="contact-company"
+                          type="text"
+                          autoComplete="organization"
+                          className="w-full bg-[#0A1428] border border-white/15 rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors"
+                          placeholder="Acme Global Inc."
                           {...register('company')}
-                          className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors"
                         />
                       </div>
+
                       <div>
-                        <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Purpose of Visit <span className="text-primary">*</span></label>
-                        <select 
+                        <label htmlFor="contact-purpose" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                          Purpose of Enquiry <span className="text-[#38BDF8]">*</span>
+                        </label>
+                        <select
+                          id="contact-purpose"
+                          aria-invalid={!!errors.purpose}
+                          aria-describedby={errors.purpose ? 'contact-purpose-error' : undefined}
+                          className={`w-full bg-[#0A1428] border ${
+                            errors.purpose ? 'border-red-500' : 'border-white/15'
+                          } rounded-lg px-4 py-3.5 text-white focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors`}
                           {...register('purpose')}
-                          className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors appearance-none"
                         >
                           <option value="">Select purpose</option>
-                          <option value="project">Project enquiry</option>
-                          <option value="service">Service information</option>
-                          <option value="career">Career enquiry</option>
-                          <option value="partnership">Partnership</option>
-                          <option value="support">Support</option>
-                          <option value="other">Other</option>
+                          <option value="project">Project Quote / Scope Discussion</option>
+                          <option value="service">Cloud &amp; IT Service Consultation</option>
+                          <option value="career">Talent &amp; Career Opportunities</option>
+                          <option value="partnership">Technology Partnership</option>
+                          <option value="support">Enterprise Support &amp; SLA</option>
+                          <option value="other">General Inquiries</option>
                         </select>
-                        {errors.purpose && <p className="text-primary text-xs mt-2">{errors.purpose.message}</p>}
+                        {errors.purpose && (
+                          <p id="contact-purpose-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                            <AlertCircle size={14} /> {errors.purpose.message}
+                          </p>
+                        )}
                       </div>
                     </div>
 
+                    {/* Message Area */}
                     <div>
-                      <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Message <span className="text-primary">*</span></label>
-                      <textarea 
+                      <label htmlFor="contact-message" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                        Message / Project Brief <span className="text-[#38BDF8]">*</span>
+                      </label>
+                      <textarea
+                        id="contact-message"
+                        rows={5}
+                        aria-invalid={!!errors.message}
+                        aria-describedby={errors.message ? 'contact-message-error' : undefined}
+                        className={`w-full bg-[#0A1428] border ${
+                          errors.message ? 'border-red-500' : 'border-white/15'
+                        } rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors resize-y`}
+                        placeholder="Describe your project requirements, current technical stack, or goals..."
                         {...register('message')}
-                        rows={4}
-                        className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors resize-none"
                       />
-                      {errors.message && <p className="text-primary text-xs mt-2">{errors.message.message}</p>}
+                      {errors.message && (
+                        <p id="contact-message-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                          <AlertCircle size={14} /> {errors.message.message}
+                        </p>
+                      )}
                     </div>
 
-                    <button 
-                      type="submit" 
+                    {/* Submit Button with Loading State & Disabled Double-Submit */}
+                    <button
+                      type="submit"
                       disabled={isSubmitting}
-                      className="btn-primary w-full py-4 mt-4"
+                      className="btn-primary w-full py-4 text-sm tracking-widest min-h-[48px] flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {isSubmitting ? 'Sending...' : 'Send Message'}
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          <span>Dispatching Enquiry...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send size={18} />
+                          <span>Send Message</span>
+                        </>
+                      )}
                     </button>
                   </form>
-                  </div>
                 )}
               </div>
             </motion.div>

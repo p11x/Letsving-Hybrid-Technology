@@ -1,0 +1,26 @@
+{
+  "short_name": "Letsving",
+  "name": "Letsving Hybrid Technology",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/icon-192.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0A1428",
+  "theme_color": "#0A1428",
+  "display": "standalone",
+  "orientation": "portrait"
+}

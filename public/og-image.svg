@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="ogGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E6FE0" />
+      <stop offset="45%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#8B7CFF" />
+    </linearGradient>
+    <radialGradient id="ogBg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#0F1E38" />
+      <stop offset="50%" stop-color="#0A1428" />
+      <stop offset="100%" stop-color="#050B18" />
+    </radialGradient>
+    <filter id="ogGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#38BDF8" flood-opacity="0.4" />
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#ogBg)" />
+  <circle cx="950" cy="220" r="320" fill="#1E6FE0" opacity="0.12" filter="blur(80px)" />
+  <circle cx="250" cy="450" r="280" fill="#8B7CFF" opacity="0.09" filter="blur(70px)" />
+
+  <!-- Grid lines -->
+  <g stroke="rgba(255,255,255,0.03)" stroke-width="1">
+    <line x1="0" y1="120" x2="1200" y2="120" />
+    <line x1="0" y1="240" x2="1200" y2="240" />
+    <line x1="0" y1="360" x2="1200" y2="360" />
+    <line x1="0" y1="480" x2="1200" y2="480" />
+  </g>
+
+  <!-- Left: Monogram Symbol -->
+  <g transform="translate(120, 150)" filter="url(#ogGlow)">
+    <rect width="300" height="300" rx="60" fill="#0D1B33" stroke="rgba(255,255,255,0.08)" stroke-width="2" />
+    <path d="M 85 65 L 85 210 L 175 210" fill="none" stroke="url(#ogGrad)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 215 85 L 215 230" fill="none" stroke="url(#ogGrad)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 85 145 L 215 145" fill="none" stroke="url(#ogGrad)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 175 210 L 215 145" fill="none" stroke="#38BDF8" stroke-width="14" stroke-dasharray="8 12" opacity="0.8" />
+    
+    <circle cx="85" cy="65" r="14" fill="#38BDF8" />
+    <circle cx="85" cy="65" r="6" fill="#FFFFFF" />
+    <circle cx="150" cy="145" r="12" fill="#8B7CFF" />
+    <circle cx="150" cy="145" r="5" fill="#FFFFFF" />
+    <circle cx="215" cy="230" r="14" fill="#1E6FE0" />
+    <circle cx="215" cy="230" r="6" fill="#FFFFFF" />
+  </g>
+
+  <!-- Right: Typography & Tagline -->
+  <g transform="translate(480, 210)" font-family="system-ui, -apple-system, 'Inter', 'Segoe UI', sans-serif">
+    <!-- Tagline Badge -->
+    <rect x="0" y="0" width="370" height="34" rx="17" fill="rgba(30,111,224,0.15)" stroke="rgba(56,189,248,0.3)" />
+    <circle cx="16" cy="17" r="4" fill="#38BDF8" />
+    <text x="32" y="22" fill="#38BDF8" font-size="12" font-weight="700" letter-spacing="3" text-transform="uppercase">
+      SMART TECHNOLOGY | SHAPING THE BUSINESS
+    </text>
+
+    <!-- Main Wordmark -->
+    <text x="0" y="95" font-size="52" font-weight="900" letter-spacing="1">
+      <tspan fill="#FFFFFF">LETSVING </tspan>
+      <tspan fill="url(#ogGrad)">HYBRID</tspan>
+    </text>
+    
+    <text x="2" y="132" font-size="18" font-weight="700" letter-spacing="8" fill="#38BDF8" font-family="monospace">
+      TECHNOLOGY
+    </text>
+
+    <!-- Subtitle / Value Prop -->
+    <text x="2" y="190" fill="rgba(255,255,255,0.7)" font-size="20" font-weight="300">
+      Enterprise Software, Hybrid Cloud Solutions &amp; Digital Innovation
+    </text>
+    
+    <g transform="translate(2, 230)" fill="#64748B" font-size="13" font-weight="600" letter-spacing="3">
+      <text x="0" y="0">
+        <tspan fill="#8B7CFF">AI</tspan>
+        <tspan fill="#38BDF8">  ●  </tspan>
+        <tspan fill="#8B7CFF">HYBRID CLOUD</tspan>
+        <tspan fill="#38BDF8">  ●  </tspan>
+        <tspan fill="#8B7CFF">IT SERVICES</tspan>
+        <tspan fill="#38BDF8">  ●  </tspan>
+        <tspan fill="#8B7CFF">ENTERPRISE</tspan>
+      </text>
+    </g>
+  </g>
+</svg>

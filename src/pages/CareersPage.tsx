@@ -2,29 +2,46 @@ import { motion } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Upload, Send } from 'lucide-react';
+import { Upload, Send, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import SEO from '../components/ui/SEO';
 
 const formSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
-  role: z.string().min(1, 'Please select a role'),
-  credentials: z.string().min(10, 'Please provide more details about your skills'),
-  message: z.string().optional(),
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
+  email: z.string().trim().email('Please enter a valid email address'),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^$|^[+]?[\d\s\-().]{7,20}$/, 'Please enter a valid phone number or leave blank')
+    .optional(),
+  role: z.string().min(1, 'Please select the position you are applying for'),
+  credentials: z.string().trim().min(10, 'Please provide at least 10 characters detailing your skills or background'),
+  message: z.string().trim().optional(),
+  honeypot: z.string().optional(),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function CareersPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof formSchema>>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      honeypot: '',
+    },
   });
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: FormValues) => {
+    if (data.honeypot && data.honeypot.length > 0) {
+      setIsSuccess(true);
+      return;
+    }
+
     setIsSubmitting(true);
+    setErrorMessage(null);
     
     try {
       const response = await fetch('/api/contact', {
@@ -32,7 +49,10 @@ export default function CareersPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          purpose: `Career Application: ${data.role}`,
+        }),
       });
 
       if (!response.ok) {
@@ -40,9 +60,10 @@ export default function CareersPage() {
       }
 
       setIsSuccess(true);
+      reset();
     } catch (error) {
-      console.error(error);
-      alert('There was an error sending your application. Please try again or contact us directly.');
+      console.error('Career application submission error:', error);
+      setErrorMessage('There was an error sending your application. Please reach us at careers@letsving.com or connect@letsving.com.');
     } finally {
       setIsSubmitting(false);
     }
@@ -51,171 +72,256 @@ export default function CareersPage() {
   return (
     <div className="w-full">
       <SEO 
-        title="Careers" 
-        description="Join Letsving Hybrid Technology and build intelligent software solutions for real business needs."
+        title="Careers & Engineering Opportunities" 
+        description="Join Letsving Hybrid Technology and build intelligent software solutions for real business needs. Explore engineering, cloud, and consulting roles."
         canonicalUrl="/careers"
       />
-      <section className="bg-[#050B18] py-32 text-center border-b border-white/5 relative overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+      <section className="bg-[#050B18] py-24 sm:py-32 text-center border-b border-white/5 relative overflow-hidden" aria-label="Careers Header">
+        <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[#1E6FE0]/10 rounded-full blur-[120px] pointer-events-none" aria-hidden="true"></div>
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
           >
-            <h1 className="text-[50px] md:text-[80px] font-black tracking-tighter uppercase text-[#F5F5F5] mb-6">Careers</h1>
-            <p className="text-lg text-white/60 max-w-2xl mx-auto font-light leading-relaxed">
+            <h1 className="text-[clamp(2.5rem,6vw,4.5rem)] font-black tracking-tighter uppercase text-[#F5F5F5] mb-4">Careers</h1>
+            <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto font-light leading-relaxed">
               Build Your Future With Letsving Hybrid Technology. Join a team that builds intelligent software solutions for real business needs.
             </p>
           </motion.div>
         </div>
       </section>
 
-      <section className="py-32 bg-[#0A1428]">
+      <section className="py-20 sm:py-28 bg-[#0A1428]" aria-label="Careers Open Roles and Application">
         <div className="container mx-auto px-4 sm:px-6 lg:px-12 max-w-6xl">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-16">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16">
             <div className="lg:col-span-2">
-              <h2 className="text-3xl font-black tracking-tighter uppercase mb-6 text-[#F5F5F5]">Open Paths</h2>
-              <p className="text-white/60 font-light leading-relaxed mb-8">
-                Share your credentials and resume. Our team will review your profile and contact you when there is a match.
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tighter uppercase mb-6 text-[#F5F5F5]">Open Paths</h2>
+              <p className="text-slate-300 font-light leading-relaxed mb-8">
+                Share your credentials and background. Our engineering and talent partners review incoming profiles weekly.
               </p>
               
-              <div className="space-y-4 mb-12">
-                {['Engineering', 'Cloud & DevOps', 'Consulting', 'UI/UX Design', 'Business Development'].map((role) => (
-                  <div key={role} className="p-6 border border-white/5 bg-[#0F1E38] hover:border-white/20 transition-all text-sm font-bold tracking-widest uppercase text-[#F5F5F5]">
-                    {role}
+              <div className="space-y-3.5 mb-12">
+                {[
+                  { title: 'Engineering', desc: 'Distributed systems, TypeScript, Go & React' },
+                  { title: 'Cloud & DevOps', desc: 'Kubernetes, Terraform, AWS & GCP architecture' },
+                  { title: 'Technology Consulting', desc: 'Enterprise architecture & roadmap advisory' },
+                  { title: 'UI/UX Design', desc: 'Design systems, accessibility & design engineering' },
+                  { title: 'Business Solutions', desc: 'Product ownership & enterprise client advisory' }
+                ].map((item) => (
+                  <div key={item.title} className="p-5 border border-white/10 bg-[#0F1E38] hover:border-[#38BDF8]/40 transition-colors rounded-lg group">
+                    <h3 className="text-sm font-bold tracking-widest uppercase text-[#F5F5F5] group-hover:text-[#38BDF8] transition-colors">{item.title}</h3>
+                    <p className="text-xs text-slate-400 mt-1">{item.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="lg:col-span-3">
-              <div className="bg-[#0F1E38] border border-white/10 p-12 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse inline-block"></span>
-                </div>
-                <div className="mb-10 border-b border-white/10 pb-6">
-                  <h3 className="text-2xl font-black tracking-tighter uppercase text-[#F5F5F5]">Start Your Journey</h3>
-                  <p className="text-white/60 font-light mt-2">Fill the details below. Keep your skills clear and attach your latest resume.</p>
+              <div className="bg-[#0F1E38] border border-white/15 p-8 sm:p-12 rounded-xl relative shadow-2xl">
+                <div className="mb-8 border-b border-white/10 pb-6">
+                  <h3 className="text-2xl font-black tracking-tighter uppercase text-[#F5F5F5]">Start Your Application</h3>
+                  <p className="text-slate-300 font-light text-sm mt-2">Fill out the details below. We value clean code and curiosity.</p>
                 </div>
 
+                {errorMessage && (
+                  <div className="mb-6 p-4 bg-red-950/60 border border-red-500/40 rounded-lg flex items-start gap-3 text-red-200 text-sm" role="alert">
+                    <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
+                    <p>{errorMessage}</p>
+                  </div>
+                )}
+
                 {isSuccess ? (
-                  <div className="text-center py-16">
-                    <div className="w-20 h-20 border border-primary/30 text-primary flex items-center justify-center mx-auto mb-6">
-                      <Send size={32} />
+                  <div className="text-center py-16" role="status" aria-live="polite">
+                    <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto mb-6">
+                      <CheckCircle2 size={36} />
                     </div>
-                    <h4 className="text-2xl font-bold text-[#F5F5F5] uppercase tracking-tighter mb-4">Application Sent</h4>
-                    <p className="text-white/60 font-light mb-10">We've received your application and will be in touch soon if there's a match.</p>
+                    <h4 className="text-2xl font-bold text-[#F5F5F5] uppercase tracking-tight mb-3">Application Submitted</h4>
+                    <p className="text-slate-300 font-light max-w-md mx-auto mb-8 text-sm sm:text-base leading-relaxed">
+                      Thank you for your interest in Letsving Hybrid Technology. Our recruitment team will review your profile and reach out if there is a match.
+                    </p>
                     <button 
+                      type="button"
                       onClick={() => setIsSuccess(false)}
-                      className="btn-secondary"
+                      className="btn-secondary min-h-[44px]"
                     >
-                      Submit another application
+                      Submit Another Application
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    
-                    {/* Honeypot field for spam prevention */}
-                    <div style={{ position: 'absolute', opacity: 0, top: 0, left: 0, zIndex: -1 }}>
-                      <label htmlFor="honeypot_career">Leave this field empty</label>
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+                    {/* Honeypot field */}
+                    <div className="sr-only" aria-hidden="true">
+                      <label htmlFor="career-honeypot">Leave empty</label>
                       <input 
                         type="text" 
-                        id="honeypot_career" 
-                        {...register('honeypot' as any)} 
+                        id="career-honeypot" 
                         tabIndex={-1} 
                         autoComplete="off"
+                        {...register('honeypot')} 
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Full Name <span className="text-primary">*</span></label>
+                        <label htmlFor="career-name" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                          Full Name <span className="text-[#38BDF8]">*</span>
+                        </label>
                         <input 
-                          {...register('name')}
-                          className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors"
+                          id="career-name"
+                          type="text"
+                          autoComplete="name"
+                          aria-invalid={!!errors.name}
+                          aria-describedby={errors.name ? 'career-name-error' : undefined}
+                          className={`w-full bg-[#0A1428] border ${errors.name ? 'border-red-500' : 'border-white/15'} rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors`}
                           placeholder="John Doe"
+                          {...register('name')}
                         />
-                        {errors.name && <p className="text-primary text-xs mt-2">{errors.name.message}</p>}
+                        {errors.name && (
+                          <p id="career-name-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                            <AlertCircle size={14} /> {errors.name.message}
+                          </p>
+                        )}
                       </div>
                       
                       <div>
-                        <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Email <span className="text-primary">*</span></label>
+                        <label htmlFor="career-email" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                          Email Address <span className="text-[#38BDF8]">*</span>
+                        </label>
                         <input 
-                          {...register('email')}
+                          id="career-email"
                           type="email"
-                          className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors"
+                          autoComplete="email"
+                          aria-invalid={!!errors.email}
+                          aria-describedby={errors.email ? 'career-email-error' : undefined}
+                          className={`w-full bg-[#0A1428] border ${errors.email ? 'border-red-500' : 'border-white/15'} rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors`}
                           placeholder="john@example.com"
+                          {...register('email')}
                         />
-                        {errors.email && <p className="text-primary text-xs mt-2">{errors.email.message}</p>}
+                        {errors.email && (
+                          <p id="career-email-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                            <AlertCircle size={14} /> {errors.email.message}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Phone (Optional)</label>
+                        <label htmlFor="career-phone" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                          Phone Number (Optional)
+                        </label>
                         <input 
-                          {...register('phone')}
+                          id="career-phone"
                           type="tel"
-                          className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors"
+                          autoComplete="tel"
+                          aria-invalid={!!errors.phone}
+                          aria-describedby={errors.phone ? 'career-phone-error' : undefined}
+                          className={`w-full bg-[#0A1428] border ${errors.phone ? 'border-red-500' : 'border-white/15'} rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors`}
                           placeholder="+91 70905 92257"
+                          {...register('phone')}
                         />
+                        {errors.phone && (
+                          <p id="career-phone-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                            <AlertCircle size={14} /> {errors.phone.message}
+                          </p>
+                        )}
                       </div>
                       
                       <div>
-                        <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Role Applying For <span className="text-primary">*</span></label>
+                        <label htmlFor="career-role" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                          Role Applying For <span className="text-[#38BDF8]">*</span>
+                        </label>
                         <select 
+                          id="career-role"
+                          aria-invalid={!!errors.role}
+                          aria-describedby={errors.role ? 'career-role-error' : undefined}
+                          className={`w-full bg-[#0A1428] border ${errors.role ? 'border-red-500' : 'border-white/15'} rounded-lg px-4 py-3.5 text-white focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors`}
                           {...register('role')}
-                          className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors appearance-none"
                         >
                           <option value="">Select role</option>
-                          <option value="engineering">Engineering</option>
-                          <option value="cloud-devops">Cloud & DevOps</option>
-                          <option value="consulting">Consulting</option>
-                          <option value="ui-ux">UI/UX Design</option>
-                          <option value="business">Business Development</option>
+                          <option value="Engineering">Engineering (Frontend / Backend / Fullstack)</option>
+                          <option value="Cloud & DevOps">Cloud &amp; DevOps Engineering</option>
+                          <option value="Technology Consulting">Technology Consulting &amp; Advisory</option>
+                          <option value="UI/UX Design">UI/UX Design &amp; Systems</option>
+                          <option value="Business Development">Business Solutions &amp; Growth</option>
                         </select>
-                        {errors.role && <p className="text-primary text-xs mt-2">{errors.role.message}</p>}
+                        {errors.role && (
+                          <p id="career-role-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                            <AlertCircle size={14} /> {errors.role.message}
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Credentials / Skills <span className="text-primary">*</span></label>
+                      <label htmlFor="career-credentials" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                        Credentials, GitHub / Portfolio &amp; Skills <span className="text-[#38BDF8]">*</span>
+                      </label>
                       <textarea 
-                        {...register('credentials')}
+                        id="career-credentials"
                         rows={4}
-                        className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors resize-none"
-                        placeholder="Tell us about your skills, tools, projects, and experience."
+                        aria-invalid={!!errors.credentials}
+                        aria-describedby={errors.credentials ? 'career-credentials-error' : undefined}
+                        className={`w-full bg-[#0A1428] border ${errors.credentials ? 'border-red-500' : 'border-white/15'} rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors resize-y`}
+                        placeholder="Highlight your stack (e.g. React, Node, Kubernetes, Python), GitHub URL, or portfolio links."
+                        {...register('credentials')}
                       />
-                      {errors.credentials && <p className="text-primary text-xs mt-2">{errors.credentials.message}</p>}
+                      {errors.credentials && (
+                        <p id="career-credentials-error" className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                          <AlertCircle size={14} /> {errors.credentials.message}
+                        </p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Resume <span className="text-primary">*</span></label>
-                      <div className="border border-dashed border-white/20 p-8 text-center bg-[#0A1428] hover:bg-white/5 transition-colors cursor-pointer relative">
-                        <Upload className="w-8 h-8 mx-auto text-primary mb-4" />
-                        <p className="text-sm font-bold tracking-widest uppercase text-[#F5F5F5] mb-2">Upload resume</p>
-                        <p className="text-xs text-white/40">PDF, DOC, or DOCX up to 8 MB</p>
-                        <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".pdf,.doc,.docx" required />
+                      <span className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                        Resume / CV Attachment
+                      </span>
+                      <div className="border-2 border-dashed border-white/20 p-6 text-center bg-[#0A1428] hover:border-[#38BDF8]/60 transition-colors rounded-lg cursor-pointer relative">
+                        <Upload className="w-8 h-8 mx-auto text-[#38BDF8] mb-2" aria-hidden="true" />
+                        <p className="text-xs font-bold tracking-widest uppercase text-white mb-1">Upload resume or drop file</p>
+                        <p className="text-[11px] text-slate-400">PDF, DOC, or DOCX up to 10 MB</p>
+                        <input 
+                          type="file" 
+                          id="career-file"
+                          aria-label="Upload resume file"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                          accept=".pdf,.doc,.docx" 
+                        />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold tracking-[0.2em] uppercase text-white/50 mb-3">Additional Message</label>
+                      <label htmlFor="career-message" className="block text-xs font-bold tracking-wider uppercase text-slate-300 mb-2">
+                        Additional Information
+                      </label>
                       <textarea 
-                        {...register('message')}
+                        id="career-message"
                         rows={3}
-                        className="w-full bg-[#0A1428] border border-white/10 px-4 py-4 text-white focus:border-primary focus:outline-none transition-colors resize-none"
-                        placeholder="Anything else you want our hiring team to know?"
+                        className="w-full bg-[#0A1428] border border-white/15 rounded-lg px-4 py-3.5 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:outline-none focus:ring-1 focus:ring-[#38BDF8] transition-colors resize-y"
+                        placeholder="Tell us what excites you or your preferred start date..."
+                        {...register('message')}
                       />
                     </div>
 
                     <button 
                       type="submit" 
                       disabled={isSubmitting}
-                      className="btn-primary w-full py-4 mt-4 flex items-center justify-center gap-2"
+                      className="btn-primary w-full py-4 min-h-[48px] flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          <span>Transmitting Application...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send size={18} />
+                          <span>Submit Application</span>
+                        </>
+                      )}
                     </button>
                   </form>
                 )}
