@@ -23,51 +23,83 @@ function getAllSourceFiles(dir) {
   return results;
 }
 
+function verifyDiskCasing(normalizedRelativePath) {
+  const segments = normalizedRelativePath.split(path.sep);
+  let current = '.';
+
+  for (const segment of segments) {
+    if (segment === '.' || !segment) continue;
+    if (!fs.existsSync(current)) return false;
+    const contents = fs.readdirSync(current);
+    if (!contents.includes(segment)) {
+      return false;
+    }
+    current = path.join(current, segment);
+  }
+
+  return true;
+}
+
+function hasDefaultExport(filePath) {
+  try {
+    const code = fs.readFileSync(filePath, 'utf8');
+    return /export\s+default\s+|export\s*\{\s*[^}]*\bas\s+default\b/.test(code);
+  } catch {
+    return false;
+  }
+}
+
 const sourceFiles = getAllSourceFiles('./src');
 
-console.log(`\n🔍 Checking imports across ${sourceFiles.length} source files in ./src...\n`);
+console.log(`\n🔍 Running enhanced import & casing audit across ${sourceFiles.length} source files...\n`);
 
 for (const filePath of sourceFiles) {
   const content = fs.readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
 
   lines.forEach((line, lineIndex) => {
-    // Match ES static and dynamic import statements
-    const match = line.match(/(?:from\s+['"]([^'"]+)['"]|import\s*\(\s*['"]([^'"]+)['"]\s*\)|import\s+['"]([^'"]+)['"])/);
-    if (match) {
-      const specifier = match[1] || match[2] || match[3];
+    // Match static and dynamic import statements
+    const importRegex = /(?:from\s+['"]([^'"]+)['"]|import\s*\(\s*['"]([^'"]+)['"]\s*\)|import\s+['"]([^'"]+)['"])/g;
+    let match;
 
-      // Only validate relative imports (starting with ./ or ../)
-      if (specifier.startsWith('.')) {
+    while ((match = importRegex.exec(line)) !== null) {
+      const specifier = match[1] || match[2] || match[3];
+      const isLazy = line.includes('lazy(');
+
+      // Check relative imports or "@/..." alias
+      if (specifier.startsWith('.') || specifier.startsWith('@/')) {
         checkedCount++;
         const fileDir = path.dirname(filePath);
+        let basePath;
+
+        if (specifier.startsWith('@/')) {
+          // Resolve alias '@/...' to root './...'
+          basePath = path.normalize(path.join('.', specifier.slice(2)));
+        } else {
+          basePath = path.normalize(path.join(fileDir, specifier));
+        }
+
         let resolvedPath = null;
         let casingValid = false;
 
-        // Common extensions supported by Vite & TypeScript
-        const possibleExtensions = ['', '.ts', '.tsx', '.js', '.jsx', '/index.ts', '/index.tsx'];
+        // Extensions including directory index resolution
+        const candidateExtensions = [
+          '',
+          '.ts',
+          '.tsx',
+          '.js',
+          '.jsx',
+          '/index.ts',
+          '/index.tsx',
+          '/index.js',
+          '/index.jsx'
+        ];
 
-        for (const ext of possibleExtensions) {
-          const candidate = path.normalize(path.join(fileDir, specifier + ext));
+        for (const ext of candidateExtensions) {
+          const candidate = basePath + ext;
           if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
             resolvedPath = candidate;
-
-            // Strict case check against Linux filesystem
-            const relativeParts = path.relative('.', candidate).split(path.sep);
-            let currentPath = '.';
-            let matchSegments = true;
-
-            for (const segment of relativeParts) {
-              if (segment === '.' || !segment) continue;
-              const directoryContents = fs.readdirSync(currentPath);
-              if (!directoryContents.includes(segment)) {
-                matchSegments = false;
-                break;
-              }
-              currentPath = path.join(currentPath, segment);
-            }
-
-            casingValid = matchSegments;
+            casingValid = verifyDiskCasing(path.relative('.', candidate));
             break;
           }
         }
@@ -78,7 +110,11 @@ for (const filePath of sourceFiles) {
           hasError = true;
         } else if (!casingValid) {
           console.error(`❌ [CASING_MISMATCH] ${filePath}:${lineIndex + 1}`);
-          console.error(`   Import '${specifier}' does not match disk casing for '${resolvedPath}'.\n`);
+          console.error(`   Import '${specifier}' does not match real filesystem casing for '${resolvedPath}'.\n`);
+          hasError = true;
+        } else if (isLazy && !hasDefaultExport(resolvedPath)) {
+          console.error(`❌ [MISSING_DEFAULT_EXPORT] ${filePath}:${lineIndex + 1}`);
+          console.error(`   '${specifier}' is loaded via lazy() but does not have a default export in '${resolvedPath}'.\n`);
           hasError = true;
         }
       }
@@ -87,9 +123,9 @@ for (const filePath of sourceFiles) {
 }
 
 if (hasError) {
-  console.error(`🚨 Import verification failed! Fix the missing files or casing mismatches before deploying.\n`);
+  console.error(`🚨 Build verification failed! Correct the unresolved imports, casing, or default exports.\n`);
   process.exit(1);
 } else {
-  console.log(`✅ All ${checkedCount} relative imports verified successfully with exact disk casing!\n`);
+  console.log(`✅ All ${checkedCount} imports and lazy boundaries verified with exact disk casing and valid default exports!\n`);
   process.exit(0);
 }

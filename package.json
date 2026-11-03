@@ -4,10 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "engines": {
-    "node": ">=18.0.0"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "tsx server.ts",
+    "typecheck": "tsc --noEmit",
     "check:imports": "node scripts/check-imports.mjs",
     "build": "node scripts/check-imports.mjs && vite build",
     "start": "tsx server.ts",
